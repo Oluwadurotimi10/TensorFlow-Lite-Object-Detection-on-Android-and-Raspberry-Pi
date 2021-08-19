@@ -22,6 +22,7 @@ import sys
 import time
 from threading import Thread
 import importlib.util
+import smtplib
 
 # Define VideoStream class to handle streaming of video from webcam in separate processing thread
 # Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
@@ -81,6 +82,39 @@ parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed u
                     action='store_true')
 
 args = parser.parse_args()
+
+
+#Email Variables
+SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
+SMTP_PORT = 587 #Server Port (don't change!)
+GMAIL_USERNAME = 'badedokun383@email.com' #gmail account
+GMAIL_PASSWORD = '$mummy01'  #gmail password
+
+
+# custom class for creating, connecting and sending mail
+
+class Emailer:
+    def sendmail(self, recipient, subject, content):
+         
+        #Create Headers
+        headers = ["From: " + GMAIL_USERNAME, "Subject: " + subject, "To: " + recipient,
+                   "MIME-Version: 1.0", "Content-Type: text/html"]
+        headers = "\r\n".join(headers)
+ 
+        #Connect to Gmail Server
+        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        session.ehlo()
+        session.starttls()
+        session.ehlo()
+ 
+        #Login to Gmail
+        session.login(GMAIL_USERNAME, GMAIL_PASSWORD)
+ 
+        #Send Email & Exit
+        session.sendmail(GMAIL_USERNAME, recipient, headers + "\r\n\r\n" + content)
+        session.quit
+ 
+sender = Emailer()
 
 MODEL_NAME = args.modeldir
 GRAPH_NAME = args.graph
@@ -187,6 +221,9 @@ while True:
     scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
     #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
+    #dictionary storage for the objects detected
+    objects_detected = {}
+
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -208,6 +245,9 @@ while True:
             cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
             cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
 
+            #content of the mail
+            objects_detected[labels[int(classes[i])]] = int(scores[i]*100)
+
     # Draw framerate in corner of frame
     cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
 
@@ -219,8 +259,15 @@ while True:
     time1 = (t2-t1)/freq
     frame_rate_calc= 1/time1
 
+    #contents to be sent to the mail
+    sendTo = 'jadesolaadedokun@email.com'
+    emailSubject = "Here are the objects detected in this image"
+    emailContent = objects_detected
+
     # Press 'q' to quit
     if cv2.waitKey(1) == ord('q'):
+        #Sends an email to the "sendTo" address with the specified "emailSubject" as the subject and "emailContent" as the email content.
+        sender.sendmail(sendTo, emailSubject, emailContent) 
         break
 
 # Clean up
