@@ -45,7 +45,7 @@ args = parser.parse_args()
 #Email Variables
 SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
 SMTP_PORT = 587 #Server Port (don't change!)
-GMAIL_USERNAME = 'badedokun383@email.com' #gmail account
+GMAIL_USERNAME = 'badedokun383@gmail.com' #gmail account
 GMAIL_PASSWORD = '$mummy01'  #gmail password
 
 
@@ -189,8 +189,11 @@ for image_path in images:
     scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
     #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
-    #dictionary storage for the objects detected
-    objects_detected = {}
+    #list storage for the objects detected
+    objects_detected = []
+    #dictionary to store objects count
+    objects_count = {}
+    
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -214,16 +217,18 @@ for image_path in images:
 
 
             #content of the mail
-            objects_detected[labels[int(classes[i])]] = int(scores[i]*100)
+            objects_detected.append(tuple([labels[int(classes[i])], int(scores[i]*100)]))
+
+            objects_count[labels[int(classes[i])]] = objects_count.get(labels[int(classes[i])],0)+1
 
     # All the results have been drawn on the image, now display the image
     cv2.imshow('Object detector', image)
 
 
     #contents to be sent to the mail
-    sendTo = 'jadesolaadedokun@email.com'
+    sendTo = 'jadesolaadedokun@gmail.com'
     emailSubject = "Here are the objects detected in this image"
-    emailContent = objects_detected
+    emailContent = str(objects_detected) + "<br>" + "The count of each object present is " + "<br>" + str(objects_count)
 
     # Press any key to continue to next image, or press 'q' to quit
     if cv2.waitKey(0) == ord('q'):

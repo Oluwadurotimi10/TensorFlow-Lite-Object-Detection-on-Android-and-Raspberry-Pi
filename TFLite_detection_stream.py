@@ -190,6 +190,11 @@ while True:
     scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
     #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
+    #list storage for the objects detected
+    objects_detected = []
+    #dictionary to store objects count
+    objects_count = {}
+
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
         if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
@@ -211,6 +216,11 @@ while True:
             cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
             cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
 
+            #content of the mail
+            objects_detected.append(tuple([labels[int(classes[i])], int(scores[i]*100)]))
+
+            objects_count[labels[int(classes[i])]] = objects_count.get(labels[int(classes[i])],0)+1
+
     # Draw framerate in corner of frame
     cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
 
@@ -222,8 +232,15 @@ while True:
     time1 = (t2-t1)/freq
     frame_rate_calc= 1/time1
 
+    #contents to be sent to the mail
+    sendTo = 'jadesolaadedokun@gmail.com'
+    emailSubject = "Here are the objects detected in this image"
+    emailContent = str(objects_detected) + "<br>" + "The count of each object present is " + "<br>" + str(objects_count)
+
     # Press 'q' to quit
     if cv2.waitKey(1) == ord('q'):
+        #Sends an email to the "sendTo" address with the specified "emailSubject" as the subject and "emailContent" as the email content.
+        sender.sendmail(sendTo, emailSubject, emailContent)  
         break
 
 # Clean up
