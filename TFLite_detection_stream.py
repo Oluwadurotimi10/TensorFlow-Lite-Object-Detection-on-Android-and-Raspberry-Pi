@@ -84,6 +84,38 @@ parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed u
 
 args = parser.parse_args()
 
+#Email Variables
+SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
+SMTP_PORT = 587 #Server Port (don't change!)
+GMAIL_USERNAME = 'badedokun383@email.com' #gmail account
+GMAIL_PASSWORD =   #gmail password
+
+
+# custom class for creating, connecting and sending mail
+
+class Emailer:
+    def sendmail(self, recipient, subject, content):
+         
+        #Create Headers
+        headers = ["From: " + GMAIL_USERNAME, "Subject: " + subject, "To: " + recipient,
+                   "MIME-Version: 1.0", "Content-Type: text/html"]
+        headers = "\r\n".join(headers)
+ 
+        #Connect to Gmail Server
+        session = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        session.ehlo()
+        session.starttls()
+        session.ehlo()
+ 
+        #Login to Gmail
+        session.login(GMAIL_USERNAME, GMAIL_PASSWORD)
+ 
+        #Send Email & Exit
+        session.sendmail(GMAIL_USERNAME, recipient, headers + "\r\n\r\n" + content)
+        session.quit
+ 
+sender = Emailer()
+
 MODEL_NAME = args.modeldir
 STREAM_URL = args.streamurl
 GRAPH_NAME = args.graph

@@ -88,7 +88,7 @@ args = parser.parse_args()
 SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
 SMTP_PORT = 587 #Server Port (don't change!)
 GMAIL_USERNAME = 'badedokun383@email.com' #gmail account
-GMAIL_PASSWORD = '$mummy01'  #gmail password
+GMAIL_PASSWORD =   #gmail password
 
 
 # custom class for creating, connecting and sending mail
